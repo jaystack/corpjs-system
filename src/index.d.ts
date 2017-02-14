@@ -2,7 +2,7 @@ export interface Params {
   name?: string
 }
 
-export type Callback<Result> = (err: Error, result: Result) => void
+export type Callback<Result> = (err: Error, result?: Result) => void
 
 export interface Component<Result> {
   start?(cb: Callback<Result>): void
