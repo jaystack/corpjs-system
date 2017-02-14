@@ -39,4 +39,5 @@ export default class System {
   start(cb: Callback<Component[]>): System
   stop(cb: Callback<Component[]>): System
   restart(cb: Callback<Component[]>): System
+  definitions: Definitions
 }
