@@ -2,12 +2,13 @@ export interface Params {
   name?: string
 }
 
-export type Callback<Result> = (err: Error, result?: Result) => void
+export type ComponentCallback<Result> = (err?: Error, result?: Result) => void
+export type SystemCallback<Components> = (err?: Error, system?: Components) => void
 
 export interface Component<Result> {
-  start?(cb: Callback<Result>): void
-  start?(deps, cb: Callback<Result>): void
-  stop?(cb: Callback<void>): void
+  start?(cb: ComponentCallback<Result>): void
+  start?(deps: { [dependencyName: string]: any }, cb: ComponentCallback<Result>): void
+  stop?(cb: ComponentCallback<void>): void
 }
 
 export interface Dependency {
@@ -26,18 +27,19 @@ export interface Definitions {
   [componentName: string]: Definition
 }
 
-export default class System {
+export default class System<Components> {
+  constructor(params?: Params)
   name: string
-  bootstrap(path: string): System
-  configure(component: Component<any>): System
-  add(componentName: string, component: Component<any>, options: Object): System
-  set(componentName: string, component: Component<any>, options: Object): System
-  remove(componentName: string): System
-  include(System): System
-  merge(System): System
-  dependsOn(...dependencies: (string | Dependency)[]): System
-  start(cb: Callback<Component<any>[]>): System
-  stop(cb: Callback<Component<any>[]>): System
-  restart(cb: Callback<Component<any>[]>): System
+  bootstrap(path: string): this
+  configure(component: Component<any>): this
+  add(componentName: string, component: Component<any>, options?: Object): this
+  set(componentName: string, component: Component<any>, options?: Object): this
+  remove(componentName: string): this
+  include(System): this
+  merge(System): this
+  dependsOn(...dependencies: (string | Dependency)[]): this
+  start(cb?: SystemCallback<Components>): this
+  stop(cb?: SystemCallback<Components>): this
+  restart(cb?: SystemCallback<Components>): this
   definitions: Definitions
 }
