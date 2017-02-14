@@ -1,0 +1,30 @@
+{
+  "name": "corpjs-endpoints",
+  "version": "0.0.1",
+  "description": "Microservice frame for graceful start and stop",
+  "main": "lib/index.js",
+  "types": "lib/index",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaystack/corpjs-endpoints.git"
+  },
+  "keywords": [
+    "microservice",
+    "gracefully",
+    "corpjs",
+    "dependencies"
+  ],
+  "author": "JayStack",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jaystack/corpjs-endpoints/issues"
+  },
+  "homepage": "https://github.com/jaystack/corpjs-endpoints#readme",
+  "dependencies": {
+    "systemic": "^1.3.0"
+  },
+  "devDependencies": {}
+}
