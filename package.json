@@ -1,5 +1,5 @@
 {
-  "name": "corpjs-endpoints",
+  "name": "corpjs-system",
   "version": "0.0.1",
   "description": "Microservice frame for graceful start and stop",
   "main": "lib/index.js",
