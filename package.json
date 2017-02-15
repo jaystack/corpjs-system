@@ -1,0 +1,41 @@
+{
+  "name": "corpjs-resource",
+  "version": "0.0.1",
+  "description": "Describe your service resource components for graceful start and stop",
+  "main": "lib/index.js",
+  "typings": "lib/index",
+  "scripts": {
+    "build": "node_modules/.bin/tsc",
+    "build:w": "node_modules/.bin/tsc -w",
+    "build-tests": "node_modules/.bin/tsc -p test_src --outDir test",
+    "build-tests:w": "node_modules/.bin/tsc -p test_src --outDir test",
+    "pretest": "npm run build-tests",
+    "test": "node_modules/.bin/mocha test/**/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaystack/corpjs-system.git"
+  },
+  "keywords": [
+    "service",
+    "microservice",
+    "graceful",
+    "component",
+    "resource"
+  ],
+  "author": "JayStack",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jaystack/corpjs-system/issues"
+  },
+  "homepage": "https://github.com/jaystack/corpjs-system#readme",
+  "dependencies": {
+    "dependency-sorter": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^2.2.39",
+    "@types/node": "^7.0.5",
+    "mocha": "^3.2.0",
+    "typescript": "^2.2.0"
+  }
+}
