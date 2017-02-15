@@ -1,5 +1,5 @@
 {
-  "name": "corpjs-resource",
+  "name": "corpjs-system",
   "version": "0.0.1",
   "description": "Describe your service resource components for graceful start and stop",
   "main": "lib/index.js",
