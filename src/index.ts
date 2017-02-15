@@ -23,14 +23,14 @@ export default class System {
 
   public add(component: Component): this {
     this.components = [
-      ...this.components,
-      { ...component, dependencies: component.dependencies || [] }
+      ... this.components,
+      { ...component, dependencies: [] }
     ]
     return this
   }
 
   public async start(): Promise<ResourceDescriptor> {
-    return await start(sort(this.components), {}, () => this.restart())
+    return await start(sort(this.components), {}, this.restart.bind(this))
   }
 
   public async stop(): Promise<void> {
