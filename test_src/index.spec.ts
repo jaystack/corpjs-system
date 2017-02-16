@@ -55,14 +55,3 @@ function sleep(timeout): Promise<void> {
     setTimeout(() => resolve(), timeout)
   })
 }
-
-/*{
-  mongo: {
-
-  }
-}
-
-... = await new System()
-  .add('config', config())
-  .add('mongo', mongo()).dependsOn('logger', {component: 'config', source: 'mongo', as: 'mongoConfig'})
-  .start()*/
