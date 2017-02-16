@@ -6,12 +6,12 @@ const dummyStartFunction = (resources: System.ResourceDescriptor, restart: Syste
   })
 }
 
-const componentsWorking: System.Component[] = [
-  { name: 'AnotherExistingComponent', dependencies: [ ], start: dummyStartFunction }, // Order is intentional (puposeful)
+const componentsWorkingSorted: System.Component[] = [
+  { name: 'YetAnotherExistingComponent', dependencies: [ ], start: dummyStartFunction },
+  { name: 'AnotherExistingComponent', dependencies: [ ], start: dummyStartFunction },
   { name: 'ExistingComponent', dependencies: [
     { component: 'AnotherExistingComponent' },
     { component: 'YetAnotherExistingComponent' },
   ], start: dummyStartFunction },
-  { name: 'YetAnotherExistingComponent', dependencies: [ ], start: dummyStartFunction },
 ]
-export default componentsWorking
+export default componentsWorkingSorted

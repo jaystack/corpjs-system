@@ -10,5 +10,9 @@
     "node_modules",
     "lib",
     "test"
+  ],
+  "include": [
+    ".",
+    "data"
   ]
 }

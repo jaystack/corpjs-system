@@ -19,6 +19,7 @@ function prepare(components: System.Component[]) {
 }
 
 export default function sort(components: System.Component[]): System.Component[] {
+  if (Array.isArray(components) && components.length === 1) return components
   assertDependencies(components)
   return new DependencySorter({ idProperty: 'name' })
     .sort(prepare(components))

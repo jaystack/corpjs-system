@@ -1,6 +1,6 @@
 import sort from './sort'
 
-class System {
+export class System {
 
   private components: System.Component[] = []
 
@@ -71,7 +71,7 @@ export async function stop([first, ...others]: System.Component[]): Promise<void
   return await stop(others)
 }
 
-declare namespace System {
+export declare namespace System {
 
   export interface ResourceDescriptor {
     [resourceName: string]: any
