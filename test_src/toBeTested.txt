@@ -8,8 +8,8 @@ config ===> {
   .start()
 
   - unit testek:
-    - assertDependencies
-    - sort
+    * assertDependencies
+    * sort
     - filterResources
       - ki mit kap: as, source
     - createDependency
