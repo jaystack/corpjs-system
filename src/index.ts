@@ -54,7 +54,7 @@ export function createDependency(dep: string | System.Dependency): System.Depend
 export function filterResources(allResources: System.ResourceDescriptor, dependencies: System.Dependency[]) {
   const resources = {}
   Object.keys(allResources).forEach(resourceName => {
-    const dependency = dependencies.find(dep => dep.component === resourceName)
+    const dependency = dependencies.filter(dep => dep.component === resourceName)[0] || null
     if (!dependency) return
     const {component, as, source} = dependency
     resources[as] = source ? allResources[component][source] : allResources[component]
