@@ -5,8 +5,8 @@
   "main": "lib/index.js",
   "typings": "lib/index",
   "scripts": {
-    "build": "node_modules/.bin/tsc",
-    "build:w": "node_modules/.bin/tsc -w",
+    "build": "node_modules/.bin/tsc -p src --outDir lib",
+    "build:w": "node_modules/.bin/tsc -w -p src --outDir lib",
     "build-tests": "node_modules/.bin/tsc -p test_src --outDir test",
     "build-tests:w": "node_modules/.bin/tsc -p test_src --outDir test",
     "pretest": "npm run build-tests",

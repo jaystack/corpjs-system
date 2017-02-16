@@ -9,6 +9,7 @@
   "exclude": [
     "node_modules",
     "lib",
-    "test"
+    "test",
+    "test_src"
   ]
 }

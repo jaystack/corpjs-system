@@ -1,7 +1,7 @@
 import DependencySorter = require('dependency-sorter')
-import { Component } from './types'
+import System from '.'
 
-export function assertDependencies(components: Component[]): void {
+export function assertDependencies(components: System.Component[]): void {
   components.forEach(component => {
     component.dependencies.forEach(dep => {
       if (!components.find(({name}) => name === dep.component))
@@ -10,7 +10,7 @@ export function assertDependencies(components: Component[]): void {
   })
 }
 
-function prepare(components: Component[]) {
+function prepare(components: System.Component[]) {
   return components
     .map((component) => ({
       ...component,
@@ -18,7 +18,7 @@ function prepare(components: Component[]) {
     }))
 }
 
-export default function sort(components: Component[]): Component[] {
+export default function sort(components: System.Component[]): System.Component[] {
   assertDependencies(components)
   return new DependencySorter({ idProperty: 'name' })
     .sort(prepare(components))

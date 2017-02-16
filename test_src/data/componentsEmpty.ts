@@ -1,4 +1,4 @@
-import {Component, Dependency} from '../../src/types'
+import System from '../../src'
 
-const emptyComponents: Component[] = []
+const emptyComponents: System.Component[] = []
 export default emptyComponents
