@@ -1,7 +1,7 @@
 import DependencySorter = require('dependency-sorter')
 import { Component } from './types'
 
-function assertDependencies(components: Component[]): void {
+export function assertDependencies(components: Component[]): void {
   components.forEach(component => {
     component.dependencies.forEach(dep => {
       if (!components.find(({name}) => name === dep.component))
