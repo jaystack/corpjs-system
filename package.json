@@ -10,7 +10,7 @@
     "build-tests": "node_modules/.bin/tsc -p test_src --outDir test",
     "build-tests:w": "node_modules/.bin/tsc -p test_src --outDir test",
     "pretest": "npm run build-tests",
-    "test": "node_modules/.bin/mocha test/**/*.spec.js"
+    "test": "node_modules/.bin/mocha test/**/*.spec.js -c"
   },
   "repository": {
     "type": "git",
