@@ -11,20 +11,15 @@ export default class System {
     )
   }
 
-  public as(name: string): this {
-    this.updateLast({ name })
-    return this
-  }
-
   public dependsOn(...deps: (string | Dependency)[]): this {
     this.updateLast({ dependencies: deps.map(createDependency) })
     return this
   }
 
-  public add(component: Component): this {
+  public add(name: string, component: Component): this {
     this.components = [
       ... this.components,
-      { ...component, dependencies: [] }
+      { ...component, name, dependencies: [] }
     ]
     return this
   }

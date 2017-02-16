@@ -6,8 +6,8 @@ describe('corpjs-system', () => {
 
   it('should work', async () => {
     const system = new System()
-      .add(config()).as('config')
-      .add(something()).as('something').dependsOn('config')
+      .add('config', config())
+      .add('something', something()).dependsOn('config')
     const resources = await system.start()
     assert.deepEqual(resources, { config: { timeout: 100 }, something: { yeee: 'yeee' } })
     await system.stop()
@@ -15,8 +15,8 @@ describe('corpjs-system', () => {
 
   it('should work', async () => {
     const system = new System()
-      .add(config()).as('config')
-      .add(something()).as('something').dependsOn({ component: 'config' })
+      .add('config', config())
+      .add('something', something()).dependsOn({ component: 'config' })
     const resources = await system.start()
     assert.deepEqual(resources, { config: { timeout: 100 }, something: { yeee: 'yeee' } })
     await system.stop()
@@ -55,3 +55,14 @@ function sleep(timeout): Promise<void> {
     setTimeout(() => resolve(), timeout)
   })
 }
+
+/*{
+  mongo: {
+
+  }
+}
+
+... = await new System()
+  .add('config', config())
+  .add('mongo', mongo()).dependsOn('logger', {component: 'config', source: 'mongo', as: 'mongoConfig'})
+  .start()*/
