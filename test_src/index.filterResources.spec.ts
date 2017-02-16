@@ -4,17 +4,6 @@ import System, {filterResources} from '../src'
 
 describe('corpjs-system / filterResources', () => {
 
-/*export function filterResources(allResources: System.ResourceDescriptor, dependencies: System.Dependency[]) {
-  const resources = {}
-  Object.keys(allResources).forEach(resourceName => {
-    const dependency = dependencies.find(dep => dep.component === resourceName)
-    if (!dependency) return
-    const {component, as, source} = dependency
-    resources[as] = source ? allResources[component][source] : allResources[component]
-  })
-  return resources
-}*/
-
   it('should not throw error for empty array', () => {
     const resourcesEmpty: System.ResourceDescriptor = []
     const dependenciesEmpty: System.Dependency[] = []
