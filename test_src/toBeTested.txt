@@ -1,0 +1,21 @@
+config ===> {
+  mongo: {
+  }
+}
+... = await new System()
+  .add('config', config())
+  .add('mongo', mongo()).dependsOn('logger', {component: 'config', source: 'mongo', as: 'mongoConfig'})
+  .start()
+
+  - unit testek:
+    * assertDependencies
+    * sort
+    - filterResources
+      - ki mit kap: as, source
+    - createDependency
+  - acceptance testek:
+    - indítás
+      - különféle függőségek (pl más néven kéri)
+      - ...
+    - leállítás
+    - restart
