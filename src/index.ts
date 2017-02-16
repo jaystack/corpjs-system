@@ -1,6 +1,6 @@
 import sort from './sort'
 
-export default System
+// export default System //  Nálam csak lefordul, de az index.js {ReferenceError: System is not defined}-dal elszáll
 
 class System {
 
@@ -38,6 +38,8 @@ class System {
     return await this.start()
   }
 }
+
+export default System // Nálam csak így fut le - SzF
 
 export function createDependency(dep: string | System.Dependency): System.Dependency {
   switch (typeof dep) {
@@ -101,3 +103,5 @@ declare namespace System {
   }
 
 }
+
+// export default System // Nálam csak így nem fut le - SzF
