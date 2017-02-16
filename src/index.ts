@@ -1,6 +1,7 @@
+import { EventEmitter } from 'events'
 import sort from './sort'
 
-export class System {
+export class System extends EventEmitter {
 
   private components: System.Component[] = []
 
@@ -33,7 +34,9 @@ export class System {
 
   public async restart(): Promise<System.ResourceDescriptor> {
     await this.stop()
-    return await this.start()
+    const resources = await this.start()
+    this.emit('restart', resources)
+    return resources
   }
 }
 
