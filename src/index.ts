@@ -1,8 +1,6 @@
 import sort from './sort'
 
-// export default System //  Nálam csak lefordul, de az index.js {ReferenceError: System is not defined}-dal elszáll
-
-class System {
+export class System {
 
   private components: System.Component[] = []
 
@@ -26,7 +24,7 @@ class System {
   }
 
   public async start(): Promise<System.ResourceDescriptor> {
-    return await start(sort(this.components), {}, this.restart.bind(this))
+    return await start(sort(this.components), {}, () => { this.restart() })
   }
 
   public async stop(): Promise<void> {
@@ -38,8 +36,6 @@ class System {
     return await this.start()
   }
 }
-
-export default System // Nálam csak így fut le - SzF
 
 export function createDependency(dep: string | System.Dependency): System.Dependency {
   switch (typeof dep) {
@@ -75,7 +71,7 @@ export async function stop([first, ...others]: System.Component[]): Promise<void
   return await stop(others)
 }
 
-declare namespace System {
+export declare namespace System {
 
   export interface ResourceDescriptor {
     [resourceName: string]: any
@@ -89,7 +85,7 @@ declare namespace System {
 
   export type StartFunction = (resources: ResourceDescriptor, restart: RestartFunction) => Promise<any>
   export type StopFunction = () => Promise<void>
-  export type RestartFunction = () => Promise<any>
+  export type RestartFunction = () => void
 
   export interface Component {
     name?: string
@@ -104,4 +100,4 @@ declare namespace System {
 
 }
 
-// export default System // Nálam csak így nem fut le - SzF
+export default System
