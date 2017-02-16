@@ -1,7 +1,5 @@
 import sort from './sort'
 
-export default System
-
 class System {
 
   private components: System.Component[] = []
@@ -26,7 +24,7 @@ class System {
   }
 
   public async start(): Promise<System.ResourceDescriptor> {
-    return await start(sort(this.components), {}, this.restart.bind(this))
+    return await start(sort(this.components), {}, () => { this.restart() })
   }
 
   public async stop(): Promise<void> {
@@ -87,7 +85,7 @@ declare namespace System {
 
   export type StartFunction = (resources: ResourceDescriptor, restart: RestartFunction) => Promise<any>
   export type StopFunction = () => Promise<void>
-  export type RestartFunction = () => Promise<any>
+  export type RestartFunction = () => void
 
   export interface Component {
     name?: string
@@ -101,3 +99,5 @@ declare namespace System {
   }
 
 }
+
+export default System
