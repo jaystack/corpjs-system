@@ -4,7 +4,7 @@ import System from '../src'
 
 describe('corpjs-system', () => {
 
-  it('should work', async () => {
+  it('should work if dependency provided as string', async () => {
     const system = new System()
       .add('config', config())
       .add('something', something()).dependsOn('config')
@@ -13,7 +13,7 @@ describe('corpjs-system', () => {
     await system.stop()
   })
 
-  it('should work', async () => {
+  it('should work if dependency provided as object of type Dependency', async () => {
     const system = new System()
       .add('config', config())
       .add('something', something()).dependsOn({ component: 'config' })

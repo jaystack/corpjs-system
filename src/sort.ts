@@ -10,7 +10,7 @@ export function assertDependencies(components: System.Component[]): void {
   })
 }
 
-function prepare(components: System.Component[]) {
+export function prepare(components: System.Component[]) {
   return components
     .map((component) => ({
       ...component,

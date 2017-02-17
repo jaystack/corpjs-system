@@ -1,12 +1,13 @@
 import 'mocha'
 import * as assert from 'assert'
 
-import sort, {assertDependencies} from '../src/sort'
+import sort, {assertDependencies, prepare} from '../src/sort'
 
 import componentsEmpty from './data/componentsEmpty'
 import componentsWorking from './data/componentsWorking'
 import componentsMissingDependency, {testedComponent, testedMissingDependency} from './data/componentsMissingDependency'
 import componentsWorkingSorted from './data/componentsWorkingSorted'
+import componentsWorkingPrepared from './data/componentsWorkingPrepared'
 
 describe('sort.ts', () => {
 
@@ -41,6 +42,16 @@ describe('sort', () => {
       assert.deepEqual(orderedComponents.map(comp => comp.name), componentsWorkingSorted.map(comp => comp.name))
     })
 
+  })
+
+})
+
+describe('prepare', () => {
+
+  it('working components array should return with correctly prepared components (.dependencies added as a string array into .depends)', () => {
+    const preparedComponents = prepare(componentsWorking)
+    assert.equal(JSON.stringify(preparedComponents), JSON.stringify(componentsWorkingPrepared))
+    //assert.deepEqual(preparedComponents, componentsWorkingPrepared) // threw strange runtime error
   })
 
 })
