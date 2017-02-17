@@ -10,9 +10,9 @@ config ===> {
   - unit testek:
     * assertDependencies
     * sort
-    - filterResources
+    * filterResources
       - ki mit kap: as, source
-    - createDependency
+    * createDependency
   - acceptance testek:
     - indítás
       - különféle függőségek (pl más néven kéri)
