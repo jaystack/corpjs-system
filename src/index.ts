@@ -86,7 +86,7 @@ export declare namespace System {
     source?: string
   }
 
-  export type StartFunction = (resources: ResourceDescriptor, restart: RestartFunction) => Promise<any>
+  export type StartFunction = (resources?: ResourceDescriptor, restart?: RestartFunction) => Promise<any>
   export type StopFunction = () => Promise<void>
   export type RestartFunction = () => void
 
