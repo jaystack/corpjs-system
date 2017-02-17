@@ -2,24 +2,120 @@ import 'mocha'
 import * as assert from 'assert'
 import System from '../src'
 
+const expectedResources = {
+  config: {
+    timeout: 10
+  },
+  something: {
+    yeee: 'yeee'
+  }
+}
+
 describe('corpjs-system', () => {
 
+  let system
+
+  beforeEach(async () => {
+    if (!system) return
+    await system.stop()
+    system = undefined
+  })
+
   it('should work if dependency provided as string', async () => {
-    const system = new System()
+    system = new System()
       .add('config', config())
       .add('something', something()).dependsOn('config')
     const resources = await system.start()
-    assert.deepEqual(resources, { config: { timeout: 100 }, something: { yeee: 'yeee' } })
-    await system.stop()
+    assert.deepEqual(resources, expectedResources)
   })
 
   it('should work if dependency provided as object of type Dependency', async () => {
-    const system = new System()
+    system = new System()
       .add('config', config())
       .add('something', something()).dependsOn({ component: 'config' })
     const resources = await system.start()
-    assert.deepEqual(resources, { config: { timeout: 100 }, something: { yeee: 'yeee' } })
-    await system.stop()
+    assert.deepEqual(resources, expectedResources)
+  })
+
+  it('should emit start', done => {
+    system = new System()
+      .add('config', config())
+      .add('something', something()).dependsOn({ component: 'config' })
+      .once('start', resources => {
+        try {
+          assert.deepEqual(resources, expectedResources)
+          done()
+        } catch (err) {
+          done(err)
+        }
+      })
+    system.start().catch(done)
+  })
+
+  it('should emit stop', done => {
+    system = new System()
+      .add('config', config())
+      .add('something', something()).dependsOn({ component: 'config' })
+      .once('stop', () => done())
+    system
+      .start()
+      .then(() => system.stop())
+      .then(() => system = undefined)
+      .catch(done)
+  })
+
+  it('should emit restart', done => {
+    system = new System()
+      .add('config', config())
+      .add('something', something()).dependsOn({ component: 'config' })
+      .once('restart', resources => {
+        try {
+          assert.deepEqual(resources, expectedResources)
+          done()
+        } catch (err) {
+          done(err)
+        }
+      })
+    system
+      .start()
+      .then(() => system.restart())
+      .catch(done)
+  })
+
+  it('should emit componentStart', done => {
+    system = new System()
+      .add('config', config())
+      .add('something', something()).dependsOn({ component: 'config' })
+      .once('componentStart', (componentName, resources) => {
+        try {
+          assert.strictEqual(componentName, 'config')
+          assert.deepEqual(resources, { config: expectedResources.config })
+          done()
+        } catch (err) {
+          done(err)
+        }
+      })
+    system
+      .start()
+      .catch(done)
+  })
+
+  it('should emit componentStop', done => {
+    system = new System()
+      .add('config', config())
+      .add('something', something()).dependsOn({ component: 'config' })
+      .once('componentStop', componentName => {
+        try {
+          assert.strictEqual(componentName, 'something')
+          done()
+        } catch (err) {
+          done(err)
+        }
+      })
+    system
+      .start()
+      .then(() => system.stop())
+      .catch(done)
   })
 
 })
@@ -27,10 +123,7 @@ describe('corpjs-system', () => {
 function config() {
   return {
     async start(deps) {
-      return { timeout: 100 }
-    },
-    async stop() {
-      console.log('stop config')
+      return expectedResources.config
     }
   }
 }
@@ -41,10 +134,9 @@ function something() {
     async start({config}) {
       timeout = config.timeout
       await sleep(timeout)
-      return { yeee: 'yeee' }
+      return expectedResources.something
     },
     async stop() {
-      console.log('stop something')
       return await sleep(timeout)
     }
   }
