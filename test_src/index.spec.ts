@@ -119,6 +119,13 @@ describe('corpjs-system', () => {
       .catch(done)
   })
 
+  it('component should stop the whole system', done => {
+    system = new System()
+      .add('partykiller', partykiller())
+      .once('stop', () => done())
+    system.start()
+  })
+
   it('should exit process after stop the System', done => {
     try {
       fork('test/test_src/child-process')
@@ -152,6 +159,14 @@ function something() {
     },
     async stop() {
       return await sleep(timeout)
+    }
+  }
+}
+
+function partykiller() {
+  return {
+    async start(_, __, stop) {
+      setTimeout(stop, 10)
     }
   }
 }

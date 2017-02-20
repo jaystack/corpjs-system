@@ -13,14 +13,18 @@ export declare namespace System {
     source?: string
   }
 
-  export type StartFunction = (resources?: ResourceDescriptor, restart?: RestartFunction) => Promise<any>
-  export type StopFunction = () => Promise<void>
+  export type ComponentStartFunction = (
+    resources?: ResourceDescriptor,
+    restart?: RestartFunction,
+    stop?: StopFunction) => Promise<any>
+  export type ComponentStopFunction = () => Promise<void>
   export type RestartFunction = () => void
+  export type StopFunction = () => void
 
   export interface Component {
     name?: string
-    start: StartFunction
-    stop?: StopFunction
+    start: ComponentStartFunction
+    stop?: ComponentStopFunction
     dependencies?: Dependency[]
   }
 
@@ -58,6 +62,7 @@ export class System extends EventEmitter {
       sort(this.components),
       {},
       () => { this.restart() },
+      () => { this.stop() },
       (componentName, resources) => this.emit('componentStart', componentName, resources)
     )
     this.emit('start', resources)
@@ -108,13 +113,14 @@ export async function start(
   [first, ...others]: System.Component[],
   resources: System.ResourceDescriptor,
   restart: System.RestartFunction,
+  stop: System.StopFunction,
   onComponentStart: (componentName: string, resources: System.ResourceDescriptor) => void
 ): Promise<System.ResourceDescriptor> {
   if (!first) return resources
-  const resource = await first.start(filterResources(resources, first.dependencies), restart)
+  const resource = await first.start(filterResources(resources, first.dependencies), restart, stop)
   const extendedResources = { ...resources, [first.name]: resource }
   onComponentStart(first.name, extendedResources)
-  return await start(others, extendedResources, restart, onComponentStart)
+  return await start(others, extendedResources, restart, stop, onComponentStart)
 }
 
 export async function stop(
