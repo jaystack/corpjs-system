@@ -247,19 +247,23 @@ describe('acceptance tests / corpjs-system', () => {
         .add('businessLogic', businessLogic()).dependsOn('config', 'logger')
       resourcesAfterInitialStart = await system.start()
 
-      system.on('restart', (resources: System.ResourceDescriptor) => { resourcesAfterRestart = resources })
+      system.on('restart', (resources: System.ResourceDescriptor) => {
+        resourcesAfterRestart = resources
+
+        it('system starts in a normal way', async () => {
+          assert.deepEqual(resourcesAfterInitialStart, { config: { timeout: 100 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
+        })
+
+        it('config chages so system restarts, resources got changed', async () => {
+          assert.deepEqual(resourcesAfterRestart, { config: { timeout: 150 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
+        })
+
+      })
 
       await sleep(1000)
       await system.stop()
     })
 
-    it('system starts in a normal way', async () => {
-      assert.deepEqual(resourcesAfterInitialStart, { config: { timeout: 100 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
-    })
-
-    it('config chages so system restarts, resources got changed', async () => {
-      assert.deepEqual(resourcesAfterRestart, { config: { timeout: 150 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
-    })
 
   })
 
