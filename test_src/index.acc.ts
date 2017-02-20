@@ -10,7 +10,7 @@ describe('acceptance tests / corpjs-system', () => {
     debugModule("corpjs-system:test:acceptance:index.acc")(message)
   }
 
-  let configTimeout = 100
+  let configTimeout = 5
 
   let startCounter = 0
   let stopCounter = 0
@@ -22,7 +22,7 @@ describe('acceptance tests / corpjs-system', () => {
     stopCounter = 0
     sequenceTracer = {}
     logTracer = []
-    configTimeout = 100
+    configTimeout = 5
   }
 
   const initialState = () => ({
@@ -76,7 +76,7 @@ describe('acceptance tests / corpjs-system', () => {
         state.startSequence = ++startCounter
         sequenceTracer = addTrace(sequenceTracer, "logger", "start", startCounter)
         logTrace(`start logger #${startCounter}`)
-        return { timeout: 200 }
+        return { timeout: 10 }
       },
       async stop() {
         state.stopped = true
@@ -129,7 +129,7 @@ describe('acceptance tests / corpjs-system', () => {
         .add('logger', logger()).dependsOn('config')
         .add('businessLogic', businessLogic()).dependsOn('config', 'logger')
       const resources = await system.start()
-      assert.deepEqual(resources, { config: { timeout: 100 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
+      assert.deepEqual(resources, { config: { timeout: 5 }, logger: { timeout: 10 }, businessLogic: { business: "logic" } })
 
       await system.stop()
       const expectedSequenceTracer = {
@@ -143,14 +143,14 @@ describe('acceptance tests / corpjs-system', () => {
       assert.deepEqual(sequenceTracer, expectedSequenceTracer)
 
       const expectedLogTracer = [
-        "start config #1 { timeout: 100 }",
+        "start config #1 { timeout: 5 }",
         "start logger #2",
         "start businessLogic #3",
         "(end of config timeout)",
         "(end of logger timeout)",
         "stop businessLogic #1",
         "stop logger #2",
-        "stop config #3 { timeout: 100 }",
+        "stop config #3 { timeout: 5 }",
       ]
       assert.deepEqual(logTracer, expectedLogTracer)
     })
@@ -170,9 +170,9 @@ describe('acceptance tests / corpjs-system', () => {
         .add('businessLogic', businessLogic()).dependsOn('config', 'logger')
       resourcesAfterInitialStart = await system.start()
 
-      await sleep(50, "[config 'changed' & being restarted]")
+      await sleep(25, "[config 'changed' & being restarted]")
         .then(async () => {
-          configTimeout = 150
+          configTimeout = 10
           logTrace("[being restarted]")
           resourcesAfterRestart = await system.restart()
           logTrace("[just restarted]")
@@ -182,11 +182,11 @@ describe('acceptance tests / corpjs-system', () => {
     })
 
     it('system starts in a normal way', async () => {
-      assert.deepEqual(resourcesAfterInitialStart, { config: { timeout: 100 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
+      assert.deepEqual(resourcesAfterInitialStart, { config: { timeout: 5 }, logger: { timeout: 10 }, businessLogic: { business: "logic" } })
     })
 
     it('config chages so system restarts, resources got changed', async () => {
-      assert.deepEqual(resourcesAfterRestart, { config: { timeout: 150 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
+      assert.deepEqual(resourcesAfterRestart, { config: { timeout: 10 }, logger: { timeout: 10 }, businessLogic: { business: "logic" } })
     })
 
     it('at stopping sequenceTrace must be "doubled"', async () => {
@@ -208,7 +208,7 @@ describe('acceptance tests / corpjs-system', () => {
 
     it('at stopping sequenceTrace must be "doubled"', async () => {
       const expectedLogTracer = [
-        "start config #1 { timeout: 100 }",
+        "start config #1 { timeout: 5 }",
         "start logger #2",
         "start businessLogic #3",
         "(end of config timeout)",
@@ -217,8 +217,8 @@ describe('acceptance tests / corpjs-system', () => {
         "[being restarted]",
         "stop businessLogic #1",
         "stop logger #2",
-        "stop config #3 { timeout: 150 }",
-        "start config #4 { timeout: 150 }",
+        "stop config #3 { timeout: 10 }",
+        "start config #4 { timeout: 10 }",
         "start logger #5",
         "start businessLogic #6",
         "(end of config timeout)",
@@ -226,7 +226,7 @@ describe('acceptance tests / corpjs-system', () => {
         "[just restarted]",
         "stop businessLogic #4",
         "stop logger #5",
-        "stop config #6 { timeout: 150 }",
+        "stop config #6 { timeout: 10 }",
       ]
       assert.deepEqual(logTracer, expectedLogTracer)
     })
@@ -242,7 +242,7 @@ describe('acceptance tests / corpjs-system', () => {
       resetCountersAndTracers()
       system = new System()
       system
-        .add('config', config(500))
+        .add('config', config(25))
         .add('logger', logger()).dependsOn('config')
         .add('businessLogic', businessLogic()).dependsOn('config', 'logger')
       resourcesAfterInitialStart = await system.start()
@@ -251,16 +251,16 @@ describe('acceptance tests / corpjs-system', () => {
         resourcesAfterRestart = resources
 
         it('system starts in a normal way', async () => {
-          assert.deepEqual(resourcesAfterInitialStart, { config: { timeout: 100 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
+          assert.deepEqual(resourcesAfterInitialStart, { config: { timeout: 5 }, logger: { timeout: 10 }, businessLogic: { business: "logic" } })
         })
 
         it('config chages so system restarts, resources got changed', async () => {
-          assert.deepEqual(resourcesAfterRestart, { config: { timeout: 150 }, logger: { timeout: 200 }, businessLogic: { business: "logic" } })
+          assert.deepEqual(resourcesAfterRestart, { config: { timeout: 10 }, logger: { timeout: 10 }, businessLogic: { business: "logic" } })
         })
 
       })
 
-      await sleep(1000)
+      await sleep(40)
       await system.stop()
     })
 
