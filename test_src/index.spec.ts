@@ -119,10 +119,17 @@ describe('corpjs-system', () => {
       .catch(done)
   })
 
-  it('component should stop the whole system', done => {
+  it('component should stop the whole system with error', done => {
     system = new System()
       .add('partykiller', partykiller())
-      .once('stop', () => done())
+      .once('stop', err => {
+        try {
+          assert.ok(/partykiller/.test(err.message))
+          done()
+        } catch (e) {
+          done(e)
+        }
+      })
     system.start()
   })
 
@@ -166,7 +173,7 @@ function something() {
 function partykiller() {
   return {
     async start(_, __, stop) {
-      setTimeout(stop, 10)
+      setTimeout(() => stop(new Error("I'm a partykiller")), 10)
     }
   }
 }

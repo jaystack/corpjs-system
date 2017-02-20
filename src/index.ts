@@ -19,7 +19,7 @@ export declare namespace System {
     stop?: StopFunction) => Promise<any>
   export type ComponentStopFunction = () => Promise<void>
   export type RestartFunction = () => void
-  export type StopFunction = () => void
+  export type StopFunction = (error?: Error) => void
 
   export interface Component {
     name?: string
@@ -62,19 +62,19 @@ export class System extends EventEmitter {
       sort(this.components),
       {},
       () => { this.restart() },
-      () => { this.stop() },
+      (error?: Error) => { this.stop(error) },
       (componentName, resources) => this.emit('componentStart', componentName, resources)
     )
     this.emit('start', resources)
     return resources
   }
 
-  public async stop(): Promise<void> {
+  public async stop(error?: Error): Promise<void> {
     await stop(
       sort(this.components).reverse(),
       (componentName) => this.emit('componentStop', componentName)
     )
-    this.emit('stop')
+    this.emit('stop', error)
   }
 
   public async restart(): Promise<System.ResourceDescriptor> {
