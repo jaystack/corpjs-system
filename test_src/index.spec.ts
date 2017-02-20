@@ -1,5 +1,6 @@
 import 'mocha'
 import * as assert from 'assert'
+import { fork } from 'child_process'
 import System from '../src'
 
 const expectedResources = {
@@ -116,6 +117,19 @@ describe('corpjs-system', () => {
       .start()
       .then(() => system.stop())
       .catch(done)
+  })
+
+  it('should exit process after stop the System', done => {
+    try {
+      fork('test/test_src/child-process')
+      .on('exit', code => {
+        if (code === 0) done()
+        else done(new Error(`Exit code: ${code}`))
+      })
+      .on('error', err => done(err))
+    } catch (err) {
+      done(err)
+    }
   })
 
 })
