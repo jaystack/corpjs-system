@@ -140,7 +140,10 @@ describe('corpjs-system', () => {
       .add('config', config())
       .add('subSystem', subSystem.group()).dependsOn('config')
     const resources = await system.start()
-    console.log(resources)
+    assert.deepStrictEqual(resources, {
+      config: { timeout: 10 },
+      subSystem: { sleeper: { yeee: 'yeee' } }
+    })
   })
 
   it('should exit process after stop the System with error', done => {

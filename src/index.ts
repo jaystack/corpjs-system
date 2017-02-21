@@ -108,8 +108,9 @@ export class System extends EventEmitter {
 
   public group(): System.Component {
     return {
-      start: async (resources: System.ResourceDescriptor, restart, stop) => this.start(resources, restart, stop),
-      stop: async () => this.stop()
+      start: async (initResources: System.ResourceDescriptor, restart, stop) =>
+        filterResources(initResources, await this.start(initResources, restart, stop)),
+      stop: async () => await this.stop()
     }
   }
 }
@@ -127,7 +128,10 @@ export function createDependency(dep: string | System.Dependency): System.Depend
   }
 }
 
-export function mapResources(allResources: System.ResourceDescriptor, dependencies: System.Dependency[]) {
+export function mapResources(
+  allResources: System.ResourceDescriptor,
+  dependencies: System.Dependency[]
+): System.ResourceDescriptor {
   const resources = {}
   Object.keys(allResources).forEach(resourceName => {
     const ownDependency = dependencies.find(dep => dep.component === resourceName)
@@ -138,6 +142,17 @@ export function mapResources(allResources: System.ResourceDescriptor, dependenci
       resources[resourceName] = allResources[resourceName]
     }
   })
+  return resources
+}
+
+export function filterResources(
+  initResources: System.ResourceDescriptor,
+  subSystemResources: System.ResourceDescriptor
+): System.ResourceDescriptor {
+  const resources = { ...subSystemResources }
+  Object.keys(initResources).forEach(
+    resourceName => delete resources[resourceName]
+  )
   return resources
 }
 
