@@ -78,15 +78,23 @@ export class System extends EventEmitter {
     restart: System.RestartFunction = () => { this.restart() },
     stop: System.StopFunction = (error?: Error) => { this.stop(error) }
   ): Promise<System.ResourceDescriptor> {
-    const resources = await start(
-      sort(this.components),
-      initResources,
-      restart,
-      stop,
-      (componentName, resources) => this.emit('componentStart', componentName, resources)
-    )
-    this.emit('start', resources)
-    return resources
+    try {
+      const resources = await start(
+        sort(this.components),
+        initResources,
+        restart,
+        stop,
+        (componentName, resources) => this.emit('componentStart', componentName, resources)
+      )
+      this.emit('start', resources)
+      return resources
+    } catch (error) {
+      if (this.options.exitOnError) {
+        process.exit(1)
+      } else {
+        throw error
+      }
+    }
   }
 
   public async stop(error?: Error): Promise<void> {
