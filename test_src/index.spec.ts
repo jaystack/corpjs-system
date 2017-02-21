@@ -7,7 +7,7 @@ const expectedResources = {
   config: {
     timeout: 10
   },
-  something: {
+  sleeper: {
     yeee: 'yeee'
   }
 }
@@ -23,25 +23,25 @@ describe('corpjs-system', () => {
   })
 
   it('should work if dependency provided as string', async () => {
-    system = new System()
+    system = new System({ exitOnError: false })
       .add('config', config())
-      .add('something', something()).dependsOn('config')
+      .add('sleeper', sleeper()).dependsOn('config')
     const resources = await system.start()
     assert.deepEqual(resources, expectedResources)
   })
 
   it('should work if dependency provided as object of type Dependency', async () => {
-    system = new System()
+    system = new System({ exitOnError: false })
       .add('config', config())
-      .add('something', something()).dependsOn({ component: 'config' })
+      .add('sleeper', sleeper()).dependsOn({ component: 'config' })
     const resources = await system.start()
     assert.deepEqual(resources, expectedResources)
   })
 
   it('should emit start', done => {
-    system = new System()
+    system = new System({ exitOnError: false })
       .add('config', config())
-      .add('something', something()).dependsOn({ component: 'config' })
+      .add('sleeper', sleeper()).dependsOn({ component: 'config' })
       .once('start', resources => {
         try {
           assert.deepEqual(resources, expectedResources)
@@ -54,9 +54,9 @@ describe('corpjs-system', () => {
   })
 
   it('should emit stop', done => {
-    system = new System()
+    system = new System({ exitOnError: false })
       .add('config', config())
-      .add('something', something()).dependsOn({ component: 'config' })
+      .add('sleeper', sleeper()).dependsOn({ component: 'config' })
       .once('stop', () => done())
     system
       .start()
@@ -66,9 +66,9 @@ describe('corpjs-system', () => {
   })
 
   it('should emit restart', done => {
-    system = new System()
+    system = new System({ exitOnError: false })
       .add('config', config())
-      .add('something', something()).dependsOn({ component: 'config' })
+      .add('sleeper', sleeper()).dependsOn({ component: 'config' })
       .once('restart', resources => {
         try {
           assert.deepEqual(resources, expectedResources)
@@ -84,9 +84,9 @@ describe('corpjs-system', () => {
   })
 
   it('should emit componentStart', done => {
-    system = new System()
+    system = new System({ exitOnError: false })
       .add('config', config())
-      .add('something', something()).dependsOn({ component: 'config' })
+      .add('sleeper', sleeper()).dependsOn({ component: 'config' })
       .once('componentStart', (componentName, resources) => {
         try {
           assert.strictEqual(componentName, 'config')
@@ -102,12 +102,12 @@ describe('corpjs-system', () => {
   })
 
   it('should emit componentStop', done => {
-    system = new System()
+    system = new System({ exitOnError: false })
       .add('config', config())
-      .add('something', something()).dependsOn({ component: 'config' })
+      .add('sleeper', sleeper()).dependsOn({ component: 'config' })
       .once('componentStop', componentName => {
         try {
-          assert.strictEqual(componentName, 'something')
+          assert.strictEqual(componentName, 'sleeper')
           done()
         } catch (err) {
           done(err)
@@ -120,7 +120,7 @@ describe('corpjs-system', () => {
   })
 
   it('component should stop the whole system with error', done => {
-    system = new System()
+    system = new System({ exitOnError: false })
       .add('partykiller', partykiller())
       .once('stop', err => {
         try {
@@ -133,14 +133,24 @@ describe('corpjs-system', () => {
     system.start()
   })
 
-  it('should exit process after stop the System', done => {
+  it('grouping', async () => {
+    const subSystem = new System({ exitOnError: false })
+      .add('sleeper', sleeper())
+    system = new System({ exitOnError: false })
+      .add('config', config())
+      .add('subSystem', subSystem.group()).dependsOn('config')
+    const resources = await system.start()
+    console.log(resources)
+  })
+
+  it('should exit process after stop the System with error', done => {
     try {
       fork('test/test_src/child-process')
-      .on('exit', code => {
-        if (code === 0) done()
-        else done(new Error(`Exit code: ${code}`))
-      })
-      .on('error', err => done(err))
+        .on('exit', code => {
+          if (code === 0) done()
+          else done(new Error(`Exit code: ${code}`))
+        })
+        .on('error', err => done(err))
     } catch (err) {
       done(err)
     }
@@ -156,13 +166,13 @@ function config() {
   }
 }
 
-function something() {
+function sleeper() {
   let timeout
   return {
     async start({config}) {
       timeout = config.timeout
       await sleep(timeout)
-      return expectedResources.something
+      return expectedResources.sleeper
     },
     async stop() {
       return await sleep(timeout)

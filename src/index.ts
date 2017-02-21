@@ -3,6 +3,10 @@ import sort from './sort'
 
 export declare namespace System {
 
+  export interface Options {
+    exitOnError?: boolean
+  }
+
   export interface ResourceDescriptor {
     [resourceName: string]: any
   }
@@ -37,6 +41,18 @@ export declare namespace System {
 export class System extends EventEmitter {
 
   private components: System.Component[] = []
+  private options: System.Options
+
+  constructor(options?: System.Options) {
+    super()
+    this.setOptions(options)
+  }
+
+  private setOptions(options: System.Options = {}) {
+    this.options = {
+      exitOnError: options.exitOnError === undefined ? true : false
+    }
+  }
 
   private updateLast(delta: System.ComponentDelta): void {
     this.components = this.components.map(
@@ -57,12 +73,16 @@ export class System extends EventEmitter {
     return this
   }
 
-  public async start(): Promise<System.ResourceDescriptor> {
+  public async start(
+    initResources: System.ResourceDescriptor = {},
+    restart: System.RestartFunction = () => { this.restart() },
+    stop: System.StopFunction = (error?: Error) => { this.stop(error) }
+  ): Promise<System.ResourceDescriptor> {
     const resources = await start(
       sort(this.components),
-      {},
-      () => { this.restart() },
-      (error?: Error) => { this.stop(error) },
+      initResources,
+      restart,
+      stop,
       (componentName, resources) => this.emit('componentStart', componentName, resources)
     )
     this.emit('start', resources)
@@ -75,6 +95,8 @@ export class System extends EventEmitter {
       (componentName) => this.emit('componentStop', componentName)
     )
     this.emit('stop', error)
+    if (error && this.options.exitOnError)
+      process.exit(1)
   }
 
   public async restart(): Promise<System.ResourceDescriptor> {
@@ -82,6 +104,13 @@ export class System extends EventEmitter {
     const resources = await this.start()
     this.emit('restart', resources)
     return resources
+  }
+
+  public group(): System.Component {
+    return {
+      start: async (resources: System.ResourceDescriptor, restart, stop) => this.start(resources, restart, stop),
+      stop: async () => this.stop()
+    }
   }
 }
 
@@ -98,13 +127,16 @@ export function createDependency(dep: string | System.Dependency): System.Depend
   }
 }
 
-export function filterResources(allResources: System.ResourceDescriptor, dependencies: System.Dependency[]) {
+export function mapResources(allResources: System.ResourceDescriptor, dependencies: System.Dependency[]) {
   const resources = {}
   Object.keys(allResources).forEach(resourceName => {
-    const dependency = dependencies.filter(dep => dep.component === resourceName)[0] || null
-    if (!dependency) return
-    const {component, as, source} = dependency
-    resources[as] = source ? allResources[component][source] : allResources[component]
+    const ownDependency = dependencies.find(dep => dep.component === resourceName)
+    if (ownDependency) {
+      const {component, as, source} = ownDependency
+      resources[as] = source ? allResources[component][source] : allResources[component]
+    } else {
+      resources[resourceName] = allResources[resourceName]
+    }
   })
   return resources
 }
@@ -117,7 +149,7 @@ export async function start(
   onComponentStart: (componentName: string, resources: System.ResourceDescriptor) => void
 ): Promise<System.ResourceDescriptor> {
   if (!first) return resources
-  const resource = await first.start(filterResources(resources, first.dependencies), restart, stop)
+  const resource = await first.start(mapResources(resources, first.dependencies), restart, stop)
   const extendedResources = { ...resources, [first.name]: resource }
   onComponentStart(first.name, extendedResources)
   return await start(others, extendedResources, restart, stop, onComponentStart)

@@ -124,7 +124,7 @@ describe('acceptance tests / corpjs-system', () => {
   describe('system simply starts and stops', () => {
     it('should work - no restarting', async () => {
       resetCountersAndTracers()
-      system = new System()
+      system = new System({ exitOnError: false })
         .add('config', config())
         .add('logger', logger()).dependsOn('config')
         .add('businessLogic', businessLogic()).dependsOn('config', 'logger')
@@ -163,7 +163,7 @@ describe('acceptance tests / corpjs-system', () => {
 
     before(async () => {
       resetCountersAndTracers()
-      system = new System()
+      system = new System({ exitOnError: false })
       system
         .add('config', config())
         .add('logger', logger()).dependsOn('config')
@@ -202,7 +202,8 @@ describe('acceptance tests / corpjs-system', () => {
         "start#6": "businessLogic",
         "stop#4": "businessLogic",
         "stop#5": "logger",
-        "stop#6": "config",    }
+        "stop#6": "config",
+      }
       assert.deepEqual(sequenceTracer, expectedSequenceTracer)
     })
 
@@ -240,7 +241,7 @@ describe('acceptance tests / corpjs-system', () => {
 
     before(async () => {
       resetCountersAndTracers()
-      system = new System()
+      system = new System({ exitOnError: false })
       system
         .add('config', config(25))
         .add('logger', logger()).dependsOn('config')
