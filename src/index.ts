@@ -58,10 +58,10 @@ export class System extends EventEmitter {
 
   private listenSigint() {
     process.on('SIGINT', this.gracefulTerminate.bind(this, 'SIGINT'))
-    process.on('SIGTERM', () => this.gracefulTerminate.bind(this, 'SIGTERM'))
+    process.on('SIGTERM', this.gracefulTerminate.bind(this, 'SIGTERM'))
   }
 
-  private async gracefulTerminate(signal) {
+  private async gracefulTerminate(signal: string) {
     console.log(signal)
     if (this.running)
       await this.stop()
