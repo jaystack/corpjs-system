@@ -42,16 +42,30 @@ export class System extends EventEmitter {
 
   private components: System.Component[] = []
   private options: System.Options
+  private running: boolean = false
 
   constructor(options?: System.Options) {
     super()
     this.setOptions(options)
+    this.listenSigint()
   }
 
   private setOptions(options: System.Options = {}) {
     this.options = {
       exitOnError: options.exitOnError === undefined ? true : false
     }
+  }
+
+  private listenSigint() {
+    process.on('SIGINT', this.gracefulTerminate.bind(this, 'SIGINT'))
+    process.on('SIGTERM', () => this.gracefulTerminate.bind(this, 'SIGTERM'))
+  }
+
+  private async gracefulTerminate(signal) {
+    console.log(signal)
+    if (this.running)
+      await this.stop()
+    process.exit(0)
   }
 
   private updateLast(delta: System.ComponentDelta): void {
@@ -86,6 +100,7 @@ export class System extends EventEmitter {
         stop,
         (componentName, resources) => this.emit('componentStart', componentName, resources)
       )
+      this.running = true
       this.emit('start', resources)
       return resources
     } catch (error) {
@@ -102,6 +117,7 @@ export class System extends EventEmitter {
       sort(this.components).reverse(),
       (componentName) => this.emit('componentStop', componentName)
     )
+    this.running = false
     this.emit('stop', error)
     if (error && this.options.exitOnError)
       process.exit(1)
