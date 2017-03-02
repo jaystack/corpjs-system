@@ -47,7 +47,7 @@ export class System extends EventEmitter {
   constructor(options?: System.Options) {
     super()
     this.setOptions(options)
-    this.listenSigint()
+    this.listenSignals()
   }
 
   private setOptions(options: System.Options = {}) {
@@ -56,7 +56,7 @@ export class System extends EventEmitter {
     }
   }
 
-  private listenSigint() {
+  private listenSignals() {
     process.on('SIGINT', this.gracefulTerminate.bind(this, 'SIGINT'))
     process.on('SIGTERM', this.gracefulTerminate.bind(this, 'SIGTERM'))
   }

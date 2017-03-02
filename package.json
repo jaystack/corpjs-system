@@ -9,7 +9,7 @@
     "build:w": "node_modules/.bin/tsc -w -p src --outDir lib",
     "build-tests": "node_modules/.bin/tsc -p test_src --outDir test",
     "build-tests:w": "node_modules/.bin/tsc -p -w test_src --outDir test",
-    "clean-test": "rimraf test",
+    "clean-test": "rm -rf test",
     "pretest": "npm run clean-test && npm run build-tests",
     "test-unit": "node_modules/.bin/mocha test/**/*.spec.js -c",
     "test-acceptance": "node_modules/.bin/mocha test/**/*.acc.js -c",
