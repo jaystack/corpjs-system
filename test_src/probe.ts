@@ -1,4 +1,4 @@
-import System from '.'
+import System from '../src'
 
 function Mock(t = 1000) {
   let timer
