@@ -62,7 +62,7 @@ export class System extends EventEmitter {
   }
 
   private async gracefulTerminate(signal: string) {
-    this.emit('termination', signal)
+    this.emit('terminate', signal)
     if (this.running)
       await this.stop()
     process.exit(0)
