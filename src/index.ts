@@ -52,7 +52,7 @@ export class System extends EventEmitter {
 
   private setOptions(options: System.Options = {}) {
     this.options = {
-      exitOnError: options.exitOnError === undefined ? true : false
+      exitOnError: options.exitOnError === undefined ? true : options.exitOnError
     }
   }
 
@@ -104,11 +104,7 @@ export class System extends EventEmitter {
       this.emit('start', resources)
       return resources
     } catch (error) {
-      if (this.options.exitOnError) {
-        process.exit(1)
-      } else {
-        throw error
-      }
+      await this.stop(error)
     }
   }
 
