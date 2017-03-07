@@ -133,6 +133,20 @@ describe('corpjs-system', () => {
     system.start()
   })
 
+  it('system stopping throws exception', done => {
+    system = new System({ exitOnError: false })
+      .add('insistent', insistent())
+      .once('stop', (_, stopErr) => {
+        try {
+          assert.ok(/insistent/.test(stopErr.message))
+          done()
+        } catch (e) {
+          done(e)
+        }
+      })
+    system.start().then(_ => system.stop())
+  })
+
   it('grouping', async () => {
     const subSystem = new System({ exitOnError: false })
       .add('sleeper', sleeper())
@@ -221,6 +235,17 @@ function partykiller() {
   return {
     async start(_, __, stop) {
       setTimeout(() => stop(new Error("I'm a partykiller")), 10)
+    }
+  }
+}
+
+function insistent() {
+  return {
+    async start() {
+      return null
+    },
+    async stop() {
+      throw new Error("insistent")
     }
   }
 }

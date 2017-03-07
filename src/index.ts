@@ -109,14 +109,22 @@ export class System extends EventEmitter {
   }
 
   public async stop(error?: Error): Promise<void> {
-    await stop(
-      sort(this.components).reverse(),
-      (componentName) => this.emit('componentStop', componentName)
-    )
+    const stopError = await this.tryToStop()
     this.running = false
-    this.emit('stop', error)
-    if (error && this.options.exitOnError)
+    this.emit('stop', error, stopError)
+    if ((error || stopError) && this.options.exitOnError)
       process.exit(1)
+  }
+
+  private async tryToStop() {
+    try {
+      await stop(
+        sort(this.components).reverse(),
+        (componentName) => this.emit('componentStop', componentName)
+      )
+    } catch (stopError) {
+      return stopError
+    }
   }
 
   public async restart(): Promise<System.ResourceDescriptor> {
@@ -141,7 +149,7 @@ export function createDependency(dep: string | System.Dependency): System.Depend
   switch (typeof dep) {
     case 'string': return { component: <string>dep, as: <string>dep }
     case 'object':
-      const {component, as, source} = <System.Dependency>dep
+      const { component, as, source } = <System.Dependency>dep
       if (!component) throw new Error(`'component' is required property on dependency component`)
       return { component, as: as || component, source }
     default: throw new Error(`Invalid dependency component: ${dep}`)
@@ -156,7 +164,7 @@ export function mapResources(
   Object.keys(allResources).forEach(resourceName => {
     const ownDependency = dependencies.find(dep => dep.component === resourceName)
     if (ownDependency) {
-      const {component, as, source} = ownDependency
+      const { component, as, source } = ownDependency
       resources[as] = source ? allResources[component][source] : allResources[component]
     } else {
       resources[resourceName] = allResources[resourceName]
