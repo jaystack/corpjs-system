@@ -197,20 +197,6 @@ describe('corpjs-system', () => {
     })
   })
 
-  it('system stopping throws exception', done => {
-    system = new System({ exitOnError: false })
-      .add('insistent', insistent())
-      .once('stop', (_, stopErr) => {
-        try {
-          assert.ok(/insistent/.test(stopErr.message))
-          done()
-        } catch (e) {
-          done(e)
-        }
-      })
-    system.start().then(_ => system.stop())
-  })
-
   it('system stopping does not throw exception when insistent component is ignorable', done => {
     system = new System({ exitOnError: false })
       .add('insistent', insistent()).ignorable()

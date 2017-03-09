@@ -33,7 +33,6 @@ Start and stop your components in proper order
   - `resources: ResourceDescriptor` - all resources of the whole system
 - stop
   - `[error]: Error` - error that causes the stop
-  - `[stopError]: Error` - error that threw through the stopping
 - restart
   - `resources: ResourceDescriptor` - all resources of the whole system after restart
 - componentStart

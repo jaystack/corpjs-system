@@ -120,23 +120,15 @@ export class System extends EventEmitter {
   }
 
   public async stop(error?: Error): Promise<void> {
-    const stopError = await this.tryToStop()
+    await stop(
+      sort(this.components).reverse(),
+      (componentName) => this.emit('componentStop', componentName),
+      (componentName, error) => this.emit('componentStopFailed', componentName, error)
+    )
     this.running = false
-    this.emit('stop', error, stopError)
-    if ((error || stopError) && this.options.exitOnError)
+    this.emit('stop', error)
+    if (error && this.options.exitOnError)
       process.exit(1)
-  }
-
-  private async tryToStop() {
-    try {
-      await stop(
-        sort(this.components).reverse(),
-        (componentName) => this.emit('componentStop', componentName),
-        (componentName, error) => this.emit('componentStopFailed', componentName, error)
-      )
-    } catch (stopError) {
-      return stopError
-    }
   }
 
   public async restart(): Promise<System.ResourceDescriptor> {
@@ -226,10 +218,8 @@ export async function stop(
   try {
     if (first.stop) await first.stop()
     onComponentStop(first.name)
-    return await stop(others, onComponentStop, onComponentStopFailed)
   } catch (err) {
     onComponentStopFailed(first.name, err)
-    if (first.mandatory) throw err
-    return await stop(others, onComponentStop, onComponentStopFailed)
   }
+  return await stop(others, onComponentStop, onComponentStopFailed)
 }
