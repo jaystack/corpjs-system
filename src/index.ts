@@ -22,14 +22,15 @@ export declare namespace System {
     restart?: RestartFunction,
     stop?: StopFunction) => Promise<any>
   export type ComponentStopFunction = () => Promise<void>
-  export type RestartFunction = () => void
-  export type StopFunction = (error?: Error) => void
+  export type RestartFunction = (component: System.Component) => void
+  export type StopFunction = (component: System.Component, error?: Error) => void
 
   export interface Component {
     name?: string
     start: ComponentStartFunction
     stop?: ComponentStopFunction
     dependencies?: Dependency[]
+    mandatory?: boolean
   }
 
   export type ComponentDelta = {
@@ -79,18 +80,26 @@ export class System extends EventEmitter {
     return this
   }
 
+  public ignorable(): this {
+    this.updateLast({ mandatory: false })
+    return this
+  }
+
   public add(name: string, component: System.Component): this {
     this.components = [
       ... this.components,
-      { ...component, name, dependencies: [] }
+      { ...component, name, dependencies: [], mandatory: true }
     ]
     return this
   }
 
   public async start(
     initResources: System.ResourceDescriptor = {},
-    restart: System.RestartFunction = () => { this.restart() },
-    stop: System.StopFunction = (error?: Error) => { this.stop(error) }
+    restart: System.RestartFunction = (component) => { this.restart() },
+    stop: System.StopFunction = (component, error?) => {
+      this.emit('componentRunFailed', component.name, error)
+      if (component.mandatory) this.stop(error)
+    }
   ): Promise<System.ResourceDescriptor> {
     try {
       const resources = await start(
@@ -98,7 +107,8 @@ export class System extends EventEmitter {
         initResources,
         restart,
         stop,
-        (componentName, resources) => this.emit('componentStart', componentName, resources)
+        (componentName, resources) => this.emit('componentStart', componentName, resources),
+        (componentName, error) => this.emit('componentStartFailed', componentName, error)
       )
       this.running = true
       this.emit('start', resources)
@@ -121,7 +131,8 @@ export class System extends EventEmitter {
     try {
       await stop(
         sort(this.components).reverse(),
-        (componentName) => this.emit('componentStop', componentName)
+        (componentName) => this.emit('componentStop', componentName),
+        (componentName, error) => this.emit('componentStopFailed', componentName, error)
       )
     } catch (stopError) {
       return stopError
@@ -190,21 +201,35 @@ export async function start(
   resources: System.ResourceDescriptor,
   restart: System.RestartFunction,
   stop: System.StopFunction,
-  onComponentStart: (componentName: string, resources: System.ResourceDescriptor) => void
+  onComponentStart: (componentName: string, resources: System.ResourceDescriptor) => void,
+  onComponentStartFailed: (componentName: string, error: Error) => void
 ): Promise<System.ResourceDescriptor> {
   if (!first) return resources
-  const resource = await first.start(mapResources(resources, first.dependencies), restart, stop)
-  const extendedResources = { ...resources, [first.name]: resource }
-  onComponentStart(first.name, extendedResources)
-  return await start(others, extendedResources, restart, stop, onComponentStart)
+  try {
+    const resource = await first.start(mapResources(resources, first.dependencies), restart.bind(null, first), stop.bind(null, first))
+    const extendedResources = { ...resources, [first.name]: resource }
+    onComponentStart(first.name, extendedResources)
+    return await start(others, extendedResources, restart, stop, onComponentStart, onComponentStartFailed)
+  } catch (err) {
+    onComponentStartFailed(first.name, err)
+    if (first.mandatory) throw err
+    return await start(others, resources, restart, stop, onComponentStart, onComponentStartFailed)
+  }
 }
 
 export async function stop(
   [first, ...others]: System.Component[],
-  onComponentStop: (componentName: string) => void
+  onComponentStop: (componentName: string) => void,
+  onComponentStopFailed: (componentName: string, error: Error) => void
 ): Promise<void> {
   if (!first) return
-  if (first.stop) await first.stop()
-  onComponentStop(first.name)
-  return await stop(others, onComponentStop)
+  try {
+    if (first.stop) await first.stop()
+    onComponentStop(first.name)
+    return await stop(others, onComponentStop, onComponentStopFailed)
+  } catch (err) {
+    onComponentStopFailed(first.name, err)
+    if (first.mandatory) throw err
+    return await stop(others, onComponentStop, onComponentStopFailed)
+  }
 }

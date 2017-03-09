@@ -101,6 +101,21 @@ describe('corpjs-system', () => {
       .catch(done)
   })
 
+  it('should emit componentStartFailed', done => {
+    system = new System({ exitOnError: false })
+      .add('defective', defective())
+      .once('componentStartFailed', (name, err) => {
+        try {
+          assert.strictEqual(name, 'defective')
+          assert.ok(err)
+          done()
+        } catch (err) {
+          done(err)
+        }
+      })
+    system.start()
+  })
+
   it('should emit componentStop', done => {
     system = new System({ exitOnError: false })
       .add('config', config())
@@ -119,6 +134,46 @@ describe('corpjs-system', () => {
       .catch(done)
   })
 
+  it('should emit componentStopFailed', done => {
+    system = new System({ exitOnError: false })
+      .add('insistent', insistent())
+      .once('componentStopFailed', (name, err) => {
+        try {
+          assert.strictEqual(name, 'insistent')
+          assert.ok(err)
+          done()
+        } catch (err) {
+          done(err)
+        }
+      })
+    system
+      .start()
+      .then(() => system.stop())
+      .catch(done)
+  })
+
+  it('should emit componentRunFailed', done => {
+    system = new System({ exitOnError: false })
+      .add('partykiller', partykiller())
+      .once('componentRunFailed', (name, err) => {
+        try {
+          assert.strictEqual(name, 'partykiller')
+          assert.ok(err)
+          done()
+        } catch (err) {
+          done(err)
+        }
+      })
+    system.start()
+  })
+
+  it('ignorable component should not prevent system start', done => {
+    system = new System({ exitOnError: false })
+      .add('defective', defective()).ignorable()
+      .once('stop', err => { if (err) done(err) })
+    system.start().then(() => done())
+  })
+
   it('component should stop the whole system with error', done => {
     system = new System({ exitOnError: false })
       .add('partykiller', partykiller())
@@ -133,12 +188,35 @@ describe('corpjs-system', () => {
     system.start()
   })
 
+  it('ignorable component should not stop the whole system with error', done => {
+    system = new System({ exitOnError: false })
+      .add('partykiller', partykiller()).ignorable()
+      .once('stop', err => { if (err) done(err) })
+    system.start().then(_ => {
+      setTimeout(done, 20)
+    })
+  })
+
   it('system stopping throws exception', done => {
     system = new System({ exitOnError: false })
       .add('insistent', insistent())
       .once('stop', (_, stopErr) => {
         try {
           assert.ok(/insistent/.test(stopErr.message))
+          done()
+        } catch (e) {
+          done(e)
+        }
+      })
+    system.start().then(_ => system.stop())
+  })
+
+  it('system stopping does not throw exception when insistent component is ignorable', done => {
+    system = new System({ exitOnError: false })
+      .add('insistent', insistent()).ignorable()
+      .once('stop', (_, stopErr) => {
+        try {
+          assert.ok(!stopErr)
           done()
         } catch (e) {
           done(e)
@@ -212,7 +290,7 @@ function config() {
 function sleeper() {
   let timeout
   return {
-    async start({config}) {
+    async start({ config }) {
       timeout = config.timeout
       await sleep(timeout)
       return expectedResources.sleeper
