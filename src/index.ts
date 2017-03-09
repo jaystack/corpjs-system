@@ -105,6 +105,7 @@ export class System extends EventEmitter {
       return resources
     } catch (error) {
       await this.stop(error)
+      return {}
     }
   }
 
