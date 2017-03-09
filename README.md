@@ -26,6 +26,7 @@ Start and stop your components in proper order
 - Opportunity for stopping the whole system from any component
 - Opportunity for ignorable component errors
 - Graceful stop and optional process exit on abnormal behavior
+- Graceful SIGINT / SIGTERM termination
 
 ## Events
 

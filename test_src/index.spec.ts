@@ -18,6 +18,8 @@ describe('corpjs-system', () => {
 
   beforeEach(async () => {
     if (!system) return
+    process.removeAllListeners()
+    system.removeAllListeners()
     await system.stop()
     system = undefined
   })

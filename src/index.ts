@@ -4,6 +4,7 @@ import sort from './sort'
 export declare namespace System {
 
   export interface Options {
+    name?: string
     exitOnError?: boolean
   }
 
@@ -47,14 +48,12 @@ export class System extends EventEmitter {
 
   constructor(options?: System.Options) {
     super()
-    this.setOptions(options)
+    this.setOptions(options || {})
     this.listenSignals()
   }
 
-  private setOptions(options: System.Options = {}) {
-    this.options = {
-      exitOnError: options.exitOnError === undefined ? true : options.exitOnError
-    }
+  private setOptions({ name, exitOnError = true }: System.Options) {
+    this.options = { name, exitOnError }
   }
 
   private listenSignals() {
@@ -144,6 +143,20 @@ export class System extends EventEmitter {
         filterResources(initResources, await this.start(initResources, restart, stop)),
       stop: async () => await this.stop()
     }
+  }
+
+  public logAllEvents(): this {
+    const systemName = this.options.name
+    return this
+      .on('start', resources => console.log(`${systemName || 'System'} started`))
+      .on('stop', error => console.log(`${systemName || 'System'} stopped`, error))
+      .on('restart', resources => console.log(`${systemName || 'System'} restarted`))
+      .on('componentStart', (name, resources) => console.log(`Component started: ${name}`))
+      .on('componentStartFailed', (name, err) => console.log(`Component start failed: ${name}`, err))
+      .on('componentStop', name => console.log(`Component stopped: ${name}`))
+      .on('componentStopFailed', (name, err) => console.log(`Component stop failed: ${name}`, err))
+      .on('componentRunFailed', (name, err) => console.log(`Component run failed: ${name}`, err))
+      .on('terminate', signal => console.log(signal))
   }
 }
 
