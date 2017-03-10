@@ -226,19 +226,6 @@ describe('corpjs-system', () => {
     })
   })
 
-  it('should exit process after empited event loop', done => {
-    try {
-      fork('test/test_src/normal-child-process')
-        .on('exit', code => {
-          if (code === 0) done()
-          else done(new Error(`Exit code: ${code}`))
-        })
-        .on('error', err => done(err))
-    } catch (err) {
-      done(err)
-    }
-  })
-
   it('should exit process by caught exception at startup', done => {
     try {
       fork('test/test_src/early-defective-child-process')
