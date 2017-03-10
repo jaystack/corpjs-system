@@ -108,7 +108,7 @@ export class System extends EventEmitter {
       this.emit('start', resources)
       return resources
     } catch (error) {
-      await this.terminate(error)
+      await this.gracefulTerminate(error)
       return {}
     }
   }
@@ -159,33 +159,32 @@ export class System extends EventEmitter {
   private async handleInterruption(component: System.Component, error?: Error) {
     this.emit('componentRunFailed', component.name, error)
     if (component.mandatory) {
-      this.terminate(error)
+      this.gracefulTerminate(error)
     }
   }
 
   private handleProcessMessage(msg: string) {
     if (msg === 'shutdown') {
       this.emit('signal', msg)
-      this.terminate()
+      this.gracefulTerminate()
     }
   }
 
   private handleSignal(signal: string) {
     this.emit('signal', signal)
-    1 // do not remove this line!
-    this.terminate()
+    this.gracefulTerminate()
   }
 
   private handleUncaughtException(error: Error) {
     this.emit('uncaughtException', error)
     process.once('uncaughtException', this.handleError.bind(this))
-    this.terminate()
+    this.gracefulTerminate()
   }
 
   private handleUnhandledRejection(error: Error) {
     this.emit('unhandledRejection', error)
     process.once('unhandledRejection', this.handleError.bind(this))
-    this.terminate()
+    this.gracefulTerminate()
   }
 
   private handleStopTimeout() {
@@ -202,7 +201,7 @@ export class System extends EventEmitter {
     this.emit('exit', code)
   }
 
-  private async terminate(error?: Error) {
+  private async gracefulTerminate(error?: Error) {
     setTimeout(this.handleStopTimeout.bind(this), this.options.stopTimeout)
     if (this.running)
       await this.stop()
