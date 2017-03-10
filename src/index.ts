@@ -6,7 +6,7 @@ export declare namespace System {
   export interface Options {
     name?: string
     exitOnError?: boolean
-    stopTimeout?: number
+    terminationTimeout?: number
   }
 
   export interface ResourceDescriptor {
@@ -53,8 +53,8 @@ export class System extends EventEmitter {
     this.listenSignals()
   }
 
-  private setOptions({ name, exitOnError = true, stopTimeout = 3000 }: System.Options) {
-    this.options = { name, exitOnError, stopTimeout }
+  private setOptions({ name, exitOnError = true, terminationTimeout = 3000 }: System.Options) {
+    this.options = { name, exitOnError, terminationTimeout }
   }
 
   private listenSignals() {
@@ -148,7 +148,7 @@ export class System extends EventEmitter {
       .on('componentStartFailed', (name, err) => console.log(`Component start failed: ${name}`, err))
       .on('componentStop', name => console.log(`Component stopped: ${name}`))
       .on('componentStopFailed', (name, err) => console.log(`Component stop failed: ${name}`, err))
-      .on('stopTimeout', timeout => console.log(`Stop timeout: ${timeout}`))
+      .on('terminationTimeout', timeout => console.log(`Stop timeout: ${timeout}`))
       .on('componentRunFailed', (name, err) => console.log(`Component run failed: ${name}`, err))
       .on('uncaughtException', err => console.log(`UncaughtException`, err))
       .on('unhandledRejection', err => console.log(`UnhandledRejection`, err))
@@ -187,9 +187,9 @@ export class System extends EventEmitter {
     this.gracefulTerminate()
   }
 
-  private handleStopTimeout() {
-    this.emit('stopTimeout', this.options.stopTimeout)
-    this.exit(1)
+  private handleTerminationTimeout() {
+    this.emit('terminationTimeout', this.options.terminationTimeout)
+    this.handleError(new Error("Termination Timeout"))
   }
 
   private handleError(error?: Error) {
@@ -202,7 +202,7 @@ export class System extends EventEmitter {
   }
 
   private async gracefulTerminate(error?: Error) {
-    setTimeout(this.handleStopTimeout.bind(this), this.options.stopTimeout)
+    setTimeout(this.handleTerminationTimeout.bind(this), this.options.terminationTimeout)
     if (this.running)
       await this.stop()
     error ? this.handleError(error) : this.exit(0)
