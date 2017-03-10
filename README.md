@@ -47,8 +47,16 @@ Start and stop your components in proper order
 - componentStopFailed
   - `componentName: String`
   - `error: Error`
+- stopTimeout
+  - `stopTimeout: Number`
 - componentRunFailed
   - `componentName: String`
   - `error: Error`
+- uncaughtException
+  - `error: Error`
+- unhandledRejection
+  - `error: Error`
 - terminate
   - `signal: String`
+- exit
+  - `code: Number`

@@ -6,6 +6,7 @@ export declare namespace System {
   export interface Options {
     name?: string
     exitOnError?: boolean
+    stopTimeout?: number
   }
 
   export interface ResourceDescriptor {
@@ -52,20 +53,17 @@ export class System extends EventEmitter {
     this.listenSignals()
   }
 
-  private setOptions({ name, exitOnError = true }: System.Options) {
-    this.options = { name, exitOnError }
+  private setOptions({ name, exitOnError=true, stopTimeout=3000 }: System.Options) {
+    this.options = { name, exitOnError, stopTimeout }
   }
 
   private listenSignals() {
-    process.on('SIGINT', this.gracefulTerminate.bind(this, 'SIGINT'))
-    process.on('SIGTERM', this.gracefulTerminate.bind(this, 'SIGTERM'))
-  }
-
-  private async gracefulTerminate(signal: string) {
-    this.emit('terminate', signal)
-    if (this.running)
-      await this.stop()
-    process.exit(0)
+    process.on('message', this.handleProcessMessage.bind(this))
+    process.once('SIGINT', this.handleSignal.bind(this, 'SIGINT'))
+    process.once('SIGTERM', this.handleSignal.bind(this, 'SIGTERM'))
+    process.once('uncaughtException', this.handleUncaughtException.bind(this))
+    process.once('unhandledRejection', this.handleUnhandledRejection.bind(this))
+    process.once('exit', this.handleExit.bind(this))
   }
 
   private updateLast(delta: System.ComponentDelta): void {
@@ -126,8 +124,7 @@ export class System extends EventEmitter {
     )
     this.running = false
     this.emit('stop', error)
-    if (error && this.options.exitOnError)
-      process.exit(1)
+    this.handleError(error)
   }
 
   public async restart(): Promise<System.ResourceDescriptor> {
@@ -149,14 +146,67 @@ export class System extends EventEmitter {
     const systemName = this.options.name
     return this
       .on('start', resources => console.log(`${systemName || 'System'} started`))
-      .on('stop', error => console.log(`${systemName || 'System'} stopped`, error))
+      .on('stop', err => console.log(`${systemName || 'System'} stopped`, err || ''))
       .on('restart', resources => console.log(`${systemName || 'System'} restarted`))
       .on('componentStart', (name, resources) => console.log(`Component started: ${name}`))
       .on('componentStartFailed', (name, err) => console.log(`Component start failed: ${name}`, err))
       .on('componentStop', name => console.log(`Component stopped: ${name}`))
       .on('componentStopFailed', (name, err) => console.log(`Component stop failed: ${name}`, err))
+      .on('stopTimeout', timeout => console.log(`Stop timeout: ${timeout}`))
       .on('componentRunFailed', (name, err) => console.log(`Component run failed: ${name}`, err))
+      .on('uncaughtException', err => console.log(`UncaughtException`, err))
+      .on('unhandledRejection', err => console.log(`UnhandledRejection`, err))
       .on('terminate', signal => console.log(signal))
+      .on('exit', code => console.log(`Exit with code: ${code}`))
+  }
+
+  private handleProcessMessage(msg: string) {
+    if (msg === 'shutdown') {
+      this.emit('terminate', msg)
+      this.gracefulTerminate()
+    }
+  }
+
+  private handleSignal(signal: string) {
+    this.emit('terminate', signal)
+    this.gracefulTerminate()
+  }
+
+  private handleUncaughtException(error: Error) {
+    this.emit('uncaughtException', error)
+    process.once('uncaughtException', this.handleError.bind(this))
+    this.gracefulTerminate()
+  }
+
+  private handleUnhandledRejection(error: Error) {
+    this.emit('unhandledRejection', error)
+    process.once('unhandledRejection', this.handleError.bind(this))
+    this.gracefulTerminate()
+  }
+
+  private handleStopTimeout() {
+    this.emit('stopTimeout', this.options.stopTimeout)
+    this.exit(1)
+  }
+
+  private handleError(error?: Error) {
+    if (error && this.options.exitOnError)
+      this.exit(1)
+  }
+
+  private handleExit(code) {
+    this.emit('exit', code)
+  }
+
+  private async gracefulTerminate() {
+    setTimeout(this.handleStopTimeout.bind(this), this.options.stopTimeout)
+    if (this.running)
+      await this.stop()
+    this.exit(0)
+  }
+
+  private exit(code: number) {
+    process.exit(code)
   }
 }
 
@@ -210,16 +260,17 @@ export async function start(
   onComponentStartFailed: (componentName: string, error: Error) => void
 ): Promise<System.ResourceDescriptor> {
   if (!first) return resources
+  let resource
   try {
-    const resource = await first.start(mapResources(resources, first.dependencies), restart.bind(null, first), stop.bind(null, first))
-    const extendedResources = { ...resources, [first.name]: resource }
-    onComponentStart(first.name, extendedResources)
-    return await start(others, extendedResources, restart, stop, onComponentStart, onComponentStartFailed)
+    resource = await first.start(mapResources(resources, first.dependencies), restart.bind(null, first), stop.bind(null, first))
   } catch (err) {
     onComponentStartFailed(first.name, err)
     if (first.mandatory) throw err
     return await start(others, resources, restart, stop, onComponentStart, onComponentStartFailed)
   }
+  const extendedResources = { ...resources, [first.name]: resource }
+  onComponentStart(first.name, extendedResources)
+  return await start(others, extendedResources, restart, stop, onComponentStart, onComponentStartFailed)
 }
 
 export async function stop(
