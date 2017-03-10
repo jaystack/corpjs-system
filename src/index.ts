@@ -178,13 +178,13 @@ export class System extends EventEmitter {
   private handleUncaughtException(error: Error) {
     this.emit('uncaughtException', error)
     process.once('uncaughtException', this.handleError.bind(this))
-    this.gracefulTerminate()
+    this.gracefulTerminate(error)
   }
 
   private handleUnhandledRejection(error: Error) {
     this.emit('unhandledRejection', error)
     process.once('unhandledRejection', this.handleError.bind(this))
-    this.gracefulTerminate()
+    this.gracefulTerminate(error)
   }
 
   private handleTerminationTimeout() {
