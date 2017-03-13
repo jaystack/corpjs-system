@@ -21,8 +21,9 @@ export declare namespace System {
 
   export type ComponentStartFunction = (
     resources?: ResourceDescriptor,
-    restart?: RestartFunction,
-    stop?: StopFunction) => Promise<any>
+    restart?: ComponentRestartFunction,
+    stop?: ComponentStopFunction) => Promise<any>
+  export type ComponentRestartFunction = () => void
   export type ComponentStopFunction = () => Promise<void>
   export type RestartFunction = (component: System.Component) => void
   export type StopFunction = (component: System.Component, error?: Error) => void
